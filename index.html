@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sleeper League Finder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Find Your Leagues</h1>
+    <form id="search-form">
+      <input type="text" id="username" placeholder="Enter your username" required />
+      <input type="number" id="year" placeholder="Year (YYYY)" required />
+      <select id="sport">
+        <option value="nfl">NFL</option>
+        <!-- extendable for other sports -->
+      </select>
+      <button type="submit">Next</button>
+    </form>
+
+    <div id="error" class="error"></div>
+    <div id="league-selection" class="hidden">
+      <label for="league-list">Select a league:</label>
+      <select id="league-list"></select>
+      <button id="go-button">Go to Standings</button>
+    </div>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>
