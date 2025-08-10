@@ -13,7 +13,8 @@ form.addEventListener("submit", async e => {
 
   const username = document.getElementById("username").value.trim();
   const year = document.getElementById("year").value;
-  const sport = document.getElementById("sport").value;
+  // const sport = document.getElementById("sport").value;
+  const sport = "nfl";
 
   try {
     const resUser = await fetch(`${API_BASE}/user/${username}`);

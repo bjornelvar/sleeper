@@ -2,30 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sleeper League Finder</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="color-scheme" content="dark">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Find Your Leagues</h1>
-    <form id="search-form">
-      <input type="text" id="username" placeholder="Enter your username" required />
-      <input type="number" id="year" placeholder="Year (YYYY)" required />
-      <select id="sport">
-        <option value="nfl">NFL</option>
-        <!-- extendable for other sports -->
-      </select>
-      <button type="submit">Next</button>
-    </form>
+  <main class="container">
+    <div class="card">
+      <h1>Find Your Leagues</h1>
+      <form id="search-form" class="stack">
+        <label>
+          <span class="label">Username</span>
+          <input type="text" id="username" placeholder="Enter your username" required />
+        </label>
 
-    <div id="error" class="error"></div>
-    <div id="league-selection" class="hidden">
-      <label for="league-list">Select a league:</label>
-      <select id="league-list"></select>
-      <button id="go-button">Go to Standings</button>
+        <label>
+          <span class="label">Year</span>
+          <input type="number" id="year" placeholder="Year (YYYY)" required />
+        </label>
+
+        <button type="submit" class="btn">Fetch leagues</button>
+      </form>
+
+      <div id="error" class="error"></div>
+
+      <div id="league-selection" class="hidden stack">
+        <label for="league-list" class="label">Select a league</label>
+        <select id="league-list"></select>
+        <button id="go-button" class="btn">Go to Standings</button>
+      </div>
     </div>
-  </div>
+  </main>
   <script src="index.js"></script>
 </body>
 </html>
