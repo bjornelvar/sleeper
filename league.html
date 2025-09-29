@@ -2,32 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>League Standings</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
   <meta name="color-scheme" content="dark">
-  <link rel="stylesheet" href="styles.css" />
+  <title>League Standings</title>
+
+  <style>
+    /* -------- Base / Theme (mobile-first) -------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    :root{
+      --bg:#0e0f12; --bg-accent:#111318;
+      --surface:#161a20; --surface-2:#1b2129;
+      --text:#e8eaed; --muted:#a7b0bd; --border:#2a313b;
+      --accent:#4da3ff; --accent-2:#62f0b3;
+      --shadow:0 10px 30px rgba(0,0,0,.45);
+      --radius:16px; --radius-sm:12px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin:0; color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 50% -200px, #1a2333 0%, rgba(26,35,51,0) 60%),
+        var(--bg);
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      width: min(720px, 94vw);
+      margin: 0 auto;
+      padding: env(safe-area-inset-top, 16px) 16px 24px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--surface) 0%, var(--bg-accent) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 10px;
+    }
+    #league-name {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .subtle {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* -------- List (mobile-first, no table) -------- */
+    .list {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: auto 1fr auto; /* Rank | Team | Metrics */
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+
+    .rank {
+      min-width: 2.6ch;
+      text-align: right;
+      opacity: .95;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .team {
+      font-weight: 600;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .metrics {
+      display: inline-flex;
+      gap: 12px;
+      justify-self: end;
+      align-items: baseline;
+      white-space: nowrap;           /* keep compact on one line */
+      font-variant-numeric: tabular-nums;
+    }
+    .metric { display: inline-flex; gap: 4px; align-items: baseline; }
+    .metric .k { color: var(--muted); font-size: .82em; letter-spacing: .2px; }
+    .metric .v { font-weight: 600; }
+
+    /* Loading / error */
+    .loading { text-align: center; color: var(--muted); margin: 8px 0 0; }
+    .error { color: #ff6b6b; text-align: center; min-height: 1.25rem; margin-top: 8px; }
+
+    /* -------- Larger screens: slightly denser -------- */
+    @media (min-width: 680px) {
+      .row { padding: 12px 14px; }
+      #league-name { font-size: 1.25rem; }
+    }
+  </style>
 </head>
+
 <body>
   <main class="container">
     <div class="card">
-      <h1 id="league-name">League Standings</h1>
+      <header>
+        <h1 id="league-name">League</h1>
+        <div class="subtle" id="week-label"></div>
+      </header>
 
-      <div class="table-wrapper">
-        <table id="standings-table" class="table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Team</th>
-              <th>Wins</th>
-              <th>Points</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div id="error" class="error"></div>
+      <div id="loading" class="loading">Loading…</div>
+
+      <ul id="standings" class="list" aria-live="polite" aria-label="League standings"></ul>
+
+      <div id="error" class="error" role="alert"></div>
     </div>
   </main>
-  <script src="league.js"></script>
+
+  <script src="league.js" defer></script>
 </body>
 </html>
