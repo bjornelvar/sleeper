@@ -6,14 +6,18 @@ const leagueSection = document.getElementById("league-selection");
 const leagueList = document.getElementById("league-list");
 const goButton = document.getElementById("go-button");
 
+leagueSection.classList.add("hidden");
+goButton.disabled = true;
+
 form.addEventListener("submit", async e => {
   e.preventDefault();
   errorDiv.textContent = "";
   leagueList.innerHTML = "";
+  leagueSection.classList.add("hidden");
+  goButton.disabled = true;
 
   const username = document.getElementById("username").value.trim();
   const year = document.getElementById("year").value;
-  // const sport = document.getElementById("sport").value;
   const sport = "nfl";
 
   try {
@@ -26,14 +30,15 @@ form.addEventListener("submit", async e => {
     const leagues = await resLeagues.json();
     if (!leagues.length) throw new Error("No leagues for that year");
 
-    leagues.forEach(l => {
+    for (const l of leagues) {
       const opt = document.createElement("option");
       opt.value = l.league_id;
       opt.textContent = l.name;
       leagueList.appendChild(opt);
-    });
+    }
 
     leagueSection.classList.remove("hidden");
+    goButton.disabled = false;
   } catch (err) {
     errorDiv.textContent = err.message;
   }
