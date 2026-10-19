@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark">
   <title>League Standings</title>
-  <link rel="stylesheet" href="styles.css?v=1" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
   <main class="container">
@@ -13,6 +13,10 @@
       <header>
         <h1 id="league-name">League</h1>
         <div class="subtle" id="week-label"></div>
+        <div id="mode" class="seg hidden" role="radiogroup" aria-label="Points">
+          <label><input type="radio" name="mode" value="live" checked /> Live</label>
+          <label><input type="radio" name="mode" value="proj" /> Projected</label>
+        </div>
       </header>
 
       <div id="loading" class="loading">Loading…</div>
@@ -23,6 +27,6 @@
     </div>
   </main>
 
-  <script src="league.js?v=1" defer></script>
+  <script src="league.js?v=3" defer></script>
 </body>
 </html>

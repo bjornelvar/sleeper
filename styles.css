@@ -70,6 +70,18 @@ input:focus, select:focus{
 .metric .k{ color:var(--muted); font-size:.82em; letter-spacing:.2px; }
 .metric .v{ font-weight:600; }
 
+/* --- Live / Projected toggle --- */
+.seg{ display:inline-flex; margin-top:8px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.seg label{ padding:6px 12px; font-size:.9rem; color:var(--muted); cursor:pointer; }
+.seg label:has(input:checked){ background:var(--surface-2); color:var(--text); }
+.seg label:has(input:focus-visible){ outline:2px solid var(--accent); outline-offset:-2px; }
+.seg input{ position:absolute; opacity:0; width:1px; height:1px; }
+
+/* --- Phones: metrics drop below the team name --- */
+@media (max-width:479px){
+  .metrics{ grid-column:2 / -1; justify-self:start; }
+}
+
 /* --- Larger screens --- */
 @media (min-width:680px){
   .row{ padding:12px 14px; }

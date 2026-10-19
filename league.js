@@ -9,6 +9,7 @@ const weekEl = $("#week-label");
 const listEl = $("#standings");
 const loadingEl = $("#loading");
 const errorEl = $("#error");
+const modeEl = $("#mode");
 
 if (leagueEl) leagueEl.textContent = leagueName;
 
@@ -75,13 +76,42 @@ async function load() {
         rosterId: r.roster_id,
         name,
         wins,
-        points: startingPoints
+        points: startingPoints,
+        // This week's points and win (0/1), per mode
+        week: { live: 0, proj: 0 },
+        weekWin: { live: 0, proj: 0 }
       });
     }
 
-    // Add current week’s live points + wins if still in regular season
+    // Add current week’s live + projected points and wins if still in regular season
     if (Number.isFinite(week) && week > 0 && seasonType === "regular" && week < playoffStart) {
-      const matchups = await fetchJSON(`${API_BASE}/league/${leagueId}/matchups/${week}`);
+      const [matchups, projections, schedule] = await Promise.all([
+        fetchJSON(`${API_BASE}/league/${leagueId}/matchups/${week}`),
+        fetchJSON(`https://api.sleeper.com/projections/nfl/${state.season}/${week}?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&position[]=DEF`),
+        fetchJSON(`https://api.sleeper.com/schedule/nfl/regular/${state.season}`)
+      ]);
+      // Score projected stats with the league's own scoring settings (handles custom scoring)
+      const scoring = league?.scoring_settings ?? {};
+      const gameStatus = new Map(schedule.map(g => [g.game_id, g.status]));
+      const projById = new Map(projections.map(p => [p.player_id, {
+        pts: Object.entries(p.stats ?? {}).reduce((sum, [k, v]) => sum + v * (scoring[k] ?? 0), 0),
+        status: gameStatus.get(p.game_id)
+      }]));
+
+      for (const m of matchups) {
+        const e = rosterMap.get(m.roster_id);
+        if (!e) continue;
+        e.week.live = Number(m.points ?? 0);
+        e.week.proj = (m.starters ?? []).reduce((sum, id) => {
+          const actual = Number(m.players_points?.[id] ?? 0);
+          const p = projById.get(id);
+          if (!p || p.status === "complete") return sum + actual;
+          if (p.status === "pre_game") return sum + p.pts;
+          // ponytail: mid-game player = max(actual, projection); no game clock in the API to blend by.
+          return sum + Math.max(actual, p.pts);
+        }, 0);
+      }
+
       const grouped = new Map();
       for (const m of matchups) {
         if (!grouped.has(m.matchup_id)) grouped.set(m.matchup_id, []);
@@ -89,22 +119,24 @@ async function load() {
       }
       for (const pair of grouped.values()) {
         if (pair.length !== 2) continue;
-        const [a, b] = pair;
-        const aPts = Number(a?.points ?? 0), bPts = Number(b?.points ?? 0);
-
-        if (rosterMap.has(a.roster_id)) rosterMap.get(a.roster_id).points += aPts;
-        if (rosterMap.has(b.roster_id)) rosterMap.get(b.roster_id).points += bPts;
-
-        if (aPts > bPts && rosterMap.has(a.roster_id)) rosterMap.get(a.roster_id).wins += 1;
-        else if (bPts > aPts && rosterMap.has(b.roster_id)) rosterMap.get(b.roster_id).wins += 1;
+        const [a, b] = pair.map(m => rosterMap.get(m.roster_id));
+        if (!a || !b) continue;
+        for (const mode of ["live", "proj"]) {
+          if (a.week[mode] > b.week[mode]) a.weekWin[mode] = 1;
+          else if (b.week[mode] > a.week[mode]) b.weekWin[mode] = 1;
+        }
       }
+      modeEl?.classList.remove("hidden");
     }
 
-    const standings = Array.from(rosterMap.values())
+    const standingsFor = (mode) => Array.from(rosterMap.values())
+      .map(e => ({ name: e.name, wins: e.wins + e.weekWin[mode], points: e.points + e.week[mode] }))
       .sort((x, y) => (y.wins - x.wins) || (y.points - x.points))
-      .map((e, i) => ({ rank: i + 1, name: e.name, wins: e.wins, points: e.points }));
+      .map((e, i) => ({ rank: i + 1, ...e }));
 
-    render(standings);
+    const selectedMode = () => modeEl?.querySelector("input:checked")?.value ?? "live";
+    modeEl?.addEventListener("change", () => render(standingsFor(selectedMode())));
+    render(standingsFor(selectedMode()));
   } catch (err) {
     errorEl.textContent = err?.message ?? String(err);
     console.error(err);
