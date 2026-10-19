@@ -1,14 +1,10 @@
 const API_BASE = "https://api.sleeper.app/v1";
 
 const form = document.getElementById("search-form");
+const submitBtn = form.querySelector("button");
 const errorDiv = document.getElementById("error");
-const leagueSection = document.getElementById("league-selection");
 const leagueList = document.getElementById("league-list");
-const goButton = document.getElementById("go-button");
 const seasonHint = document.getElementById("season-hint");
-
-leagueSection.classList.add("hidden");
-goButton.disabled = true;
 
 function computeSeasonYear(d = new Date()) {
   // Season runs Aug 31 (Y) -> Aug 30 (Y+1). If today >= Aug 31 this year, season = this year; else prev year.
@@ -17,54 +13,48 @@ function computeSeasonYear(d = new Date()) {
   return d >= seasonStartThisYear ? y : y - 1;
 }
 
-function formatRangeForSeason(y) {
-  // For display only
-  const start = `Aug 31, ${y}`;
-  const end = `Aug 30, ${y + 1}`;
-  return `${start} – ${end}`;
-}
-
-// Show the auto season hint on load
 const seasonYear = computeSeasonYear();
-if (seasonHint) seasonHint.textContent = `Season: ${seasonYear}  (${formatRangeForSeason(seasonYear)})`;
+if (seasonHint) seasonHint.textContent = `Enter your Sleeper username to see your ${seasonYear} leagues.`;
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
   errorDiv.textContent = "";
   leagueList.innerHTML = "";
-  leagueSection.classList.add("hidden");
-  goButton.disabled = true;
+  leagueList.classList.add("hidden");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Finding leagues…";
 
   const username = document.getElementById("username").value.trim();
-  const sport = "nfl";
-  const year = seasonYear;
 
   try {
     const resUser = await fetch(`${API_BASE}/user/${encodeURIComponent(username)}`);
-    if (!resUser.ok) throw new Error("User not found");
-    const { user_id } = await resUser.json();
+    const user = resUser.ok ? await resUser.json() : null;
+    if (!user?.user_id) throw new Error(`No Sleeper user named "${username}". Check the spelling and try again.`);
 
-    const resLeagues = await fetch(`${API_BASE}/user/${user_id}/leagues/${sport}/${year}`);
-    if (!resLeagues.ok) throw new Error("No leagues found");
+    const resLeagues = await fetch(`${API_BASE}/user/${user.user_id}/leagues/nfl/${seasonYear}`);
+    if (!resLeagues.ok) throw new Error(`Couldn't load leagues (${resLeagues.status}). Try again.`);
     const leagues = await resLeagues.json();
-    if (!leagues.length) throw new Error("No leagues for that season");
+    if (!leagues.length) throw new Error(`${username} has no NFL leagues for ${seasonYear}.`);
 
     for (const l of leagues) {
-      const opt = document.createElement("option");
-      opt.value = l.league_id;
-      opt.textContent = l.name;
-      leagueList.appendChild(opt);
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = `league.html?leagueId=${l.league_id}&leagueName=${encodeURIComponent(l.name)}`;
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = l.name;
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = `${l.total_rosters} teams`;
+      a.append(name, meta);
+      li.appendChild(a);
+      leagueList.appendChild(li);
     }
-
-    leagueSection.classList.remove("hidden");
-    goButton.disabled = false;
+    leagueList.classList.remove("hidden");
   } catch (err) {
     errorDiv.textContent = err.message;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Find leagues";
   }
-});
-
-goButton.addEventListener("click", () => {
-  const leagueId = leagueList.value;
-  const leagueName = encodeURIComponent(leagueList.options[leagueList.selectedIndex].text);
-  window.location.href = `league.html?leagueId=${leagueId}&leagueName=${leagueName}`;
 });

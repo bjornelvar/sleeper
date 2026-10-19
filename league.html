@@ -4,29 +4,44 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
   <title>League Standings</title>
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <main class="container">
-    <div class="card">
-      <header>
-        <h1 id="league-name">League</h1>
+    <header>
+      <a class="back" href="index.html">Change league</a>
+      <h1 id="league-name">League</h1>
+      <div class="bar">
         <div class="subtle" id="week-label"></div>
         <div id="mode" class="seg hidden" role="radiogroup" aria-label="Points">
           <label><input type="radio" name="mode" value="live" checked /> Live</label>
           <label><input type="radio" name="mode" value="proj" /> Projected</label>
         </div>
-      </header>
+      </div>
+    </header>
 
-      <div id="loading" class="loading">Loading…</div>
+    <div id="loading" class="loading">Loading standings…</div>
 
-      <ul id="standings" class="list" aria-live="polite" aria-label="League standings"></ul>
+    <table class="standings" aria-live="polite" aria-label="League standings">
+      <thead>
+        <tr>
+          <th scope="col" class="rank">Rank</th>
+          <th scope="col">Team</th>
+          <th scope="col" class="num rec">W–L</th>
+          <th scope="col" class="num pts">Pts</th>
+        </tr>
+      </thead>
+      <tbody id="standings"></tbody>
+    </table>
 
-      <div id="error" class="error" role="alert"></div>
-    </div>
+    <div id="error" class="error" role="alert"></div>
   </main>
 
-  <script src="league.js?v=3" defer></script>
+  <script src="league.js?v=5" defer></script>
 </body>
 </html>

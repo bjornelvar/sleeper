@@ -2,36 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Sleeper League Finder</title>
   <meta name="color-scheme" content="dark">
-  <link rel="stylesheet" href="styles.css?v=2" />
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <main class="container">
-    <div class="card">
-      <h1>Find Your Leagues</h1>
+    <h1>Find your league</h1>
+    <p class="intro" id="season-hint">Enter your Sleeper username to see your leagues.</p>
 
-      <form id="search-form" class="stack">
-        <label>
-          <span class="label">Username</span>
-          <input type="text" id="username" placeholder="Enter your username" required />
-        </label>
-
-        <div id="season-hint" class="subtle"></div>
-
-        <button type="submit" class="btn">Fetch leagues</button>
-      </form>
-
-      <div id="error" class="error"></div>
-
-      <div id="league-selection" class="hidden stack">
-        <label for="league-list" class="label">Select a league</label>
-        <select id="league-list"></select>
-        <button id="go-button" class="btn">Go to Standings</button>
+    <form id="search-form" class="stack">
+      <div>
+        <label class="label" for="username">Sleeper username</label>
+        <input type="text" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required />
       </div>
-    </div>
+      <button type="submit" class="btn">Find leagues</button>
+    </form>
+
+    <div id="error" class="error" role="alert"></div>
+
+    <ul id="league-list" class="leagues hidden" aria-label="Your leagues"></ul>
   </main>
-  <script src="index.js?v=2"></script>
+  <script src="index.js?v=3"></script>
 </body>
 </html>

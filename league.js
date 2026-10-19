@@ -62,6 +62,8 @@ async function load() {
       const startingPoints = baseFpts + baseFptsDec / 100;
 
       const wins = Number(r?.settings?.wins ?? 0);
+      const losses = Number(r?.settings?.losses ?? 0);
+      const ties = Number(r?.settings?.ties ?? 0);
       const ownerId = r?.owner_id ?? null;
 
       const rosterTeamName = r?.metadata?.team_name?.trim?.();
@@ -76,10 +78,13 @@ async function load() {
         rosterId: r.roster_id,
         name,
         wins,
+        losses,
+        ties,
         points: startingPoints,
-        // This week's points and win (0/1), per mode
+        // This week's points and result ("W" / "L" / null), per mode
         week: { live: 0, proj: 0 },
-        weekWin: { live: 0, proj: 0 }
+        weekRes: { live: null, proj: null },
+        opp: null
       });
     }
 
@@ -121,22 +126,33 @@ async function load() {
         if (pair.length !== 2) continue;
         const [a, b] = pair.map(m => rosterMap.get(m.roster_id));
         if (!a || !b) continue;
+        a.opp = b;
+        b.opp = a;
         for (const mode of ["live", "proj"]) {
-          if (a.week[mode] > b.week[mode]) a.weekWin[mode] = 1;
-          else if (b.week[mode] > a.week[mode]) b.weekWin[mode] = 1;
+          if (a.week[mode] > b.week[mode]) [a.weekRes[mode], b.weekRes[mode]] = ["W", "L"];
+          else if (b.week[mode] > a.week[mode]) [a.weekRes[mode], b.weekRes[mode]] = ["L", "W"];
         }
       }
       modeEl?.classList.remove("hidden");
     }
 
+    const resultWords = { live: { W: "Ahead", L: "Behind", null: "Tied" }, proj: { W: "Win", L: "Loss", null: "Tie" } };
     const standingsFor = (mode) => Array.from(rosterMap.values())
-      .map(e => ({ name: e.name, wins: e.wins + e.weekWin[mode], points: e.points + e.week[mode] }))
+      .map(e => ({
+        name: e.name,
+        wins: e.wins + (e.weekRes[mode] === "W"),
+        losses: e.losses + (e.weekRes[mode] === "L"),
+        ties: e.ties,
+        points: e.points + e.week[mode],
+        weekLine: e.opp ? `${resultWords[mode][e.weekRes[mode]]} ${fmt2(e.week[mode])}–${fmt2(e.opp.week[mode])}` : ""
+      }))
       .sort((x, y) => (y.wins - x.wins) || (y.points - x.points))
       .map((e, i) => ({ rank: i + 1, ...e }));
 
+    const playoffTeams = Number(league?.settings?.playoff_teams ?? 0);
     const selectedMode = () => modeEl?.querySelector("input:checked")?.value ?? "live";
-    modeEl?.addEventListener("change", () => render(standingsFor(selectedMode())));
-    render(standingsFor(selectedMode()));
+    modeEl?.addEventListener("change", () => render(standingsFor(selectedMode()), playoffTeams));
+    render(standingsFor(selectedMode()), playoffTeams);
   } catch (err) {
     errorEl.textContent = err?.message ?? String(err);
     console.error(err);
@@ -145,29 +161,43 @@ async function load() {
   }
 }
 
-function render(items) {
+// Arcade-style ranks: 1ST, 2ND, 3RD, 4TH, 11TH...
+const ordinal = (n) => n + ((n % 100 >= 11 && n % 100 <= 13) ? "TH" : ({ 1: "ST", 2: "ND", 3: "RD" }[n % 10] ?? "TH"));
+
+function render(items, playoffTeams) {
   listEl.innerHTML = "";
   for (const t of items) {
-    const li = document.createElement("li");
-    li.className = "row";
+    const tr = document.createElement("tr");
+    tr.className = "t";
 
-    const rank = document.createElement("div");
+    const rank = document.createElement("td");
     rank.className = "rank";
-    rank.textContent = t.rank;
+    rank.textContent = ordinal(t.rank);
 
-    const team = document.createElement("div");
+    const team = document.createElement("td");
     team.className = "team";
-    team.textContent = t.name ?? "";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = t.name ?? "";
+    const weekLine = document.createElement("span");
+    weekLine.className = "week";
+    weekLine.textContent = t.weekLine;
+    team.append(name, weekLine);
 
-    const metrics = document.createElement("div");
-    metrics.className = "metrics";
-    metrics.innerHTML = `
-      <span class="metric"><span class="k">W</span><span class="v">${Number(t.wins ?? 0)}</span></span>
-      <span class="metric"><span class="k">PTS</span><span class="v">${fmt2(t.points ?? 0)}</span></span>
-    `;
+    const rec = document.createElement("td");
+    rec.className = "num rec";
+    rec.textContent = `${t.wins}–${t.losses}${t.ties ? `–${t.ties}` : ""}`;
 
-    li.append(rank, team, metrics);
-    listEl.appendChild(li);
+    const pts = document.createElement("td");
+    pts.className = "num pts";
+    pts.textContent = fmt2(t.points);
+
+    tr.append(rank, team, rec, pts);
+    listEl.appendChild(tr);
+
+    if (t.rank === playoffTeams && t.rank < items.length) {
+      listEl.insertAdjacentHTML("beforeend", `<tr class="cut"><td colspan="4">Playoff line</td></tr>`);
+    }
   }
 }
 
