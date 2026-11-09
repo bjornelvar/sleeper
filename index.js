@@ -5,6 +5,8 @@ const submitBtn = form.querySelector("button");
 const errorDiv = document.getElementById("error");
 const leagueList = document.getElementById("league-list");
 const seasonHint = document.getElementById("season-hint");
+const input = document.getElementById("sleeper-name");
+const SAVED_KEY = "sleeperUsername";
 
 function computeSeasonYear(d = new Date()) {
   // Season runs Aug 31 (Y) -> Aug 30 (Y+1). If today >= Aug 31 this year, season = this year; else prev year.
@@ -24,12 +26,13 @@ form.addEventListener("submit", async e => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Finding leagues…";
 
-  const username = document.getElementById("username").value.trim();
+  const username = input.value.trim();
 
   try {
     const resUser = await fetch(`${API_BASE}/user/${encodeURIComponent(username)}`);
     const user = resUser.ok ? await resUser.json() : null;
     if (!user?.user_id) throw new Error(`No Sleeper user named "${username}". Check the spelling and try again.`);
+    try { localStorage.setItem(SAVED_KEY, username); } catch {}
 
     const resLeagues = await fetch(`${API_BASE}/user/${user.user_id}/leagues/nfl/${seasonYear}`);
     if (!resLeagues.ok) throw new Error(`Couldn't load leagues (${resLeagues.status}). Try again.`);
@@ -58,3 +61,11 @@ form.addEventListener("submit", async e => {
     submitBtn.textContent = "Find leagues";
   }
 });
+
+// Returning visitor: prefill the last username that worked and load its leagues straight away.
+let saved = null;
+try { saved = localStorage.getItem(SAVED_KEY); } catch {}
+if (saved) {
+  input.value = saved;
+  form.requestSubmit();
+}
