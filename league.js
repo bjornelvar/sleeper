@@ -39,7 +39,9 @@ async function load() {
       fetchJSON(`${API_BASE}/league/${leagueId}`)
     ]);
 
-    const week = Number(state?.week ?? 0);
+    // The week to add on top of roster W-L/points = first week Sleeper hasn't scored into them yet.
+    // Not state.week: that flips to next week right after MNF, before the finished week is scored.
+    const week = Number(league?.settings?.last_scored_leg ?? (state?.week - 1)) + 1;
     const playoffStart = Number(league?.settings?.playoff_week_start ?? Number.POSITIVE_INFINITY);
     const seasonType = league?.season_type || state?.season_type || "regular";
 
