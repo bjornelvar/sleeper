@@ -146,6 +146,7 @@ async function load() {
         losses: e.losses + (e.weekRes[mode] === "L"),
         ties: e.ties,
         points: e.points + e.week[mode],
+        res: e.weekRes[mode],
         weekLine: e.opp ? `${resultWords[mode][e.weekRes[mode]]} ${fmt2(e.week[mode])}–${fmt2(e.opp.week[mode])}` : ""
       }))
       .sort((x, y) => (y.wins - x.wins) || (y.points - x.points))
@@ -183,7 +184,14 @@ function render(items, playoffTeams) {
     name.textContent = t.name ?? "";
     const weekLine = document.createElement("span");
     weekLine.className = "week";
-    weekLine.textContent = t.weekLine;
+    if (t.weekLine) {
+      // Fixed-width slot on every row (tie = dim dash) so the score text lines up either way.
+      const icon = document.createElement("span");
+      icon.className = `res ${t.res ?? "T"}`;
+      icon.textContent = { W: "O", L: "X" }[t.res] ?? "-";
+      icon.setAttribute("aria-hidden", "true"); // the word after it already says win/loss
+      weekLine.append(icon, t.weekLine);
+    }
     team.append(name, weekLine);
 
     const rec = document.createElement("td");

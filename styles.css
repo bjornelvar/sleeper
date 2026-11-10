@@ -95,6 +95,9 @@ input:focus{ outline:none; box-shadow:4px 4px 0 var(--dim); }
 .standings td.num{ font-size:1.5rem; line-height:1; padding-top:11px; }
 .team .name{ display:block; color:var(--white); font-size:1.5rem; line-height:1; overflow-wrap:anywhere; padding-top:2px; }
 .team .week{ display:block; margin-top:2px; color:var(--dim); font-size:1.1rem; white-space:nowrap; } /* spills under the empty W–L/Pts space on line 2 */
+.team .res{ display:inline-block; width:1.6em; font:400 .75rem/1 var(--pixel); vertical-align:-2px; } /* 12px = crisp on the font's pixel grid */
+.team .res.W{ color:var(--green); }
+.team .res.L{ color:var(--red); }
 
 /* The playoff line */
 .standings tr.cut td{
