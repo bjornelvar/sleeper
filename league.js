@@ -104,6 +104,7 @@ async function load() {
         pts: Object.entries(p.stats ?? {}).reduce((sum, [k, v]) => sum + v * (scoring[k] ?? 0), 0),
         status: gameStatus.get(p.game_id)
       }]));
+      const leftShare = gameShareLeft(new Date());
 
       for (const m of matchups) {
         const e = rosterMap.get(m.roster_id);
@@ -114,8 +115,8 @@ async function load() {
           const p = projById.get(id);
           if (!p || p.status === "complete") return sum + actual;
           if (p.status === "pre_game") return sum + p.pts;
-          // ponytail: mid-game player = max(actual, projection); no game clock in the API to blend by.
-          return sum + Math.max(actual, p.pts);
+          // Mid-game: points so far + the projection for the part of the game still to play (as Sleeper does).
+          return sum + actual + p.pts * leftShare;
         }, 0);
       }
 
@@ -162,6 +163,18 @@ async function load() {
   } finally {
     loadingEl?.classList.add("hidden");
   }
+}
+
+// Share (0–1) of an in-progress game still to play.
+// ponytail: the schedule API has no kickoff time or clock, so assume the latest standard ET slot
+// (9:30, 1:00, 4:15, 8:15) that has passed and a ~190 min game. Wrong for 1pm games running past 4:15
+// and odd kickoffs; swap in a real game clock (e.g. ESPN scoreboard) if that matters.
+function gameShareLeft(now) {
+  const [h, m] = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "numeric", hourCycle: "h23" })
+    .format(now).split(":").map(Number);
+  const nowMin = h * 60 + m;
+  const kickoff = [570, 780, 975, 1215].filter(t => t <= nowMin).pop() ?? 1215 - 1440; // after midnight = last night's 8:15
+  return Math.min(1, Math.max(0, 1 - (nowMin - kickoff) / 190));
 }
 
 // Arcade-style ranks: 1ST, 2ND, 3RD, 4TH, 11TH...
